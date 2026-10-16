@@ -3,7 +3,7 @@ import { findRestaurants, placeDetails, type Restaurant } from "@/lib/places";
 import { NEAR_YOU, parseArea, parseCraving } from "@/lib/input";
 import { act, RoomError, settleTapWar, tapWarOver, toView } from "@/lib/room";
 import { getRoom, updateRoom } from "@/lib/rooms";
-import { bad } from "../input";
+import { bad } from "@/lib/http";
 
 export async function GET(req: Request, ctx: RouteContext<"/api/rooms/[code]">) {
   const { code } = await ctx.params;

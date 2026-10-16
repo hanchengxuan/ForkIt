@@ -138,7 +138,7 @@ type Action = {
 };
 
 /** Every action a member can take. A new feature is a new entry here, plus a test in room.test.ts. */
-const ACTIONS: Record<string, Action> = {
+const ACTIONS = {
   start: {
     hostOnly: true,
     run(room) {
@@ -239,7 +239,10 @@ const ACTIONS: Record<string, Action> = {
       for (const m of room.members) Object.assign(m, { done: false, vetoUsed: false });
     },
   },
-};
+} satisfies Record<string, Action>;
+
+/** What a phone can send as `action`, so the client gets a compile error for a typo. */
+export type ActionName = keyof typeof ACTIONS | "join";
 
 function join(room: Room, id: string, body: Body) {
   if (room.members.some((m) => m.id === id)) return;
@@ -256,7 +259,7 @@ export function act(room: Room, memberId: string, action: string, body: Body, pr
   if (action === "join") return join(room, memberId, body);
   const me = room.members.find((m) => m.id === memberId);
   if (!me) throw new RoomError("You're not in this group");
-  const a = Object.hasOwn(ACTIONS, action) ? ACTIONS[action] : undefined;
+  const a: Action | undefined = Object.hasOwn(ACTIONS, action) ? ACTIONS[action as keyof typeof ACTIONS] : undefined;
   if (!a) throw new RoomError("Unknown action");
   if (a.hostOnly && me.id !== room.hostId) throw new RoomError("Only the host can do that");
   if (a.lobbyOnly && room.status !== "lobby") throw new RoomError("Swiping has already started");

@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { priceLabel, type Limits } from "@/lib/budget";
 import type { RoomView } from "@/lib/room";
 import { Arrow, Check, Copy, Fork, Pencil, Pin, Plus, Search, Share, User, X } from "../../icons";
-import { Avatar, budgetLabel, Button, Field, LimitsPicker, Photo, Suggest, useAccountName, type Act } from "../../ui";
+import type { Act } from "@/lib/api-client";
+import { Avatar, budgetLabel, Button, Field, LimitsPicker, Photo, Suggest, useAccountName } from "../../ui";
 
 export function JoinForm({ room, act }: { room: RoomView; act: Act }) {
   const accountName = useAccountName();

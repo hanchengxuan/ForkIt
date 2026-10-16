@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Arrow, Crown, Fork, Heart, Pin, Send, Share, Star, User, X } from "./icons";
 import { ensureSession } from "@/lib/auth-client";
-import { Account, api, Button, CodeJoin, Field, Logo, Suggest, useAccountName } from "./ui";
+import { api } from "@/lib/api-client";
+import { Account, Button, CodeJoin, Field, Logo, Suggest, useAccountName } from "./ui";
 
 export default function Home() {
   const router = useRouter();

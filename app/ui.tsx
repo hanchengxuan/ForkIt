@@ -6,21 +6,9 @@ import { useEffect, useId, useState } from "react";
 import { authClient, ensureSession, signOut } from "@/lib/auth-client";
 import type { Suggestion } from "@/lib/places";
 import { money, type Limits } from "@/lib/budget";
+import { api } from "@/lib/api-client";
 import type { RoomView } from "@/lib/room";
 import { Arrow, Check, Fork } from "./icons";
-
-export type Act = (action: string, extra?: object) => Promise<void>;
-
-export async function api<T = { room: RoomView; notice?: string }>(
-  url: string,
-  body?: object,
-): Promise<T> {
-  const res = await fetch(url, body ? { method: "POST", body: JSON.stringify(body) } : { cache: "no-store" });
-  const json = await res.json().catch(() => ({ error: "Something went wrong" }));
-  if (!res.ok) throw new Error(json.error ?? "Something went wrong");
-  return json;
-}
-
 
 /** Shows who's signed in. Guests see a sign-in link; their rooms move to the account when they sign in. */
 export function Account() {

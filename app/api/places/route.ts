@@ -1,7 +1,7 @@
 import { userIdOf } from "@/lib/auth";
 import { suggest } from "@/lib/places";
 import { getRoom } from "@/lib/rooms";
-import { bad } from "../rooms/input";
+import { bad } from "@/lib/http";
 
 /** Typeahead: ?q=newt&kind=area, or ?q=sushi&kind=restaurant&code=ABCD to favour places near that room. */
 export async function GET(req: Request) {

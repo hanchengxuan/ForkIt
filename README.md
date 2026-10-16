@@ -10,7 +10,7 @@ docker run -d --name forkit-pg -e POSTGRES_PASSWORD=forkit -e POSTGRES_DB=forkit
 npm install
 npm run db:migrate           # creates the rooms table
 npm run dev                  # http://localhost:3000
-npm test                     # scoring, budget and room rules
+npm test                     # scoring, budget and room rules (CI also runs lint and typecheck)
 ```
 
 ## Deploy

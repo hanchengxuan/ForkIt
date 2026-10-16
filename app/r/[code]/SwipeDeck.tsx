@@ -6,7 +6,8 @@ import type { Restaurant } from "@/lib/places";
 import type { RoomView } from "@/lib/room";
 import type { Vote } from "@/lib/scoring";
 import { Ban, ChevronUp, Heart, Star, X } from "../../icons";
-import { Avatar, Button, Kbd, Photo, type Act } from "../../ui";
+import type { Act } from "@/lib/api-client";
+import { Avatar, Button, Kbd, Photo } from "../../ui";
 import { Details, DetailsBody, Meta, Photos } from "./Details";
 
 const THRESHOLD = 110;
