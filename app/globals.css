@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* "Night Market": dark ground so food photos pop; lime = yes, coral = no, gold = love. */
+@theme inline {
+  --color-night: #121014;
+  --color-surface: #1d1a1f;
+  --color-line: #2e2a31;
+  --color-paper: #f5f1ea;
+  --color-muted: #a39ea6;
+  --color-faint: #7d7782;
+  --color-lime: #c8f03c;
+  --color-coral: #ff5c4d;
+  --color-gold: #ffc93c;
+  --color-sky: #8fb8ff;
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-bricolage);
+}
+
+body {
+  background: var(--color-night);
+  color: var(--color-paper);
+}
+
+::placeholder {
+  color: var(--color-faint);
+}
+
+.glow {
+  box-shadow: 0 0 34px -4px rgb(200 240 60 / 0.55);
+}
+
+.lift {
+  box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.9);
+}
