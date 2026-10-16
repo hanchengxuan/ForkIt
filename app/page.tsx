@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Arrow, Crown, Fork, Heart, Pin, Send, Share, Star, User, X } from "./icons";
 import { ensureSession } from "@/lib/auth-client";
 import { Account, api, Button, CodeJoin, Field, Logo, Suggest, useAccountName } from "./ui";
@@ -9,6 +9,17 @@ import { Account, api, Button, CodeJoin, Field, Logo, Suggest, useAccountName } 
 export default function Home() {
   const router = useRouter();
   const [joining, setJoining] = useState(false);
+
+  // The code form gets its own history entry, so the phone's back gesture (and Cancel) returns here
+  function openJoin() {
+    history.pushState({ joining: true }, "");
+    setJoining(true);
+  }
+  useEffect(() => {
+    const onBack = () => setJoining(false);
+    addEventListener("popstate", onBack);
+    return () => removeEventListener("popstate", onBack);
+  }, []);
   const accountName = useAccountName();
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
@@ -48,7 +59,7 @@ export default function Home() {
         <Logo className="text-[26px] lg:text-3xl" />
         <span className="flex-1" />
         <Account />
-        <JoinBox open={joining} onOpen={() => setJoining(true)} />
+        <JoinBox open={joining} onToggle={() => (joining ? history.back() : openJoin())} />
       </nav>
 
       {joining ? (
@@ -129,14 +140,12 @@ function Step({ icon, children }: { icon: React.ReactNode; children: React.React
 }
 
 /** Mobile: a "Join" pill that swaps the page to the code form. Web: the code box sits in the nav. */
-function JoinBox({ open, onOpen }: { open: boolean; onOpen: () => void }) {
+function JoinBox({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   return (
     <>
-      {!open && (
-        <button onClick={onOpen} className="rounded-full border-[1.5px] border-line px-4 py-2 text-sm font-bold lg:hidden">
-          Join
-        </button>
-      )}
+      <button onClick={onToggle} className="rounded-full border-[1.5px] border-line px-4 py-2 text-sm font-bold lg:hidden">
+        {open ? "Cancel" : "Join"}
+      </button>
       <div className="hidden lg:block">
         <CodeJoin inline />
       </div>
