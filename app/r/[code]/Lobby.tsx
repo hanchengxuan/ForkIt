@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { priceLabel, type Limits } from "@/lib/budget";
-import type { RoomView } from "@/lib/rooms";
+import type { RoomView } from "@/lib/room";
 import { Arrow, Check, Copy, Fork, Pencil, Pin, Plus, Search, Share, User, X } from "../../icons";
 import { Avatar, budgetLabel, Button, Field, LimitsPicker, Photo, Suggest, useAccountName, type Act } from "../../ui";
 

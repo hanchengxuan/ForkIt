@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { RoomView } from "@/lib/rooms";
+import type { RoomView } from "@/lib/room";
 import type { Vote } from "@/lib/scoring";
 import { Ban, ChevronUp, Crown, Hand, Heart, Refresh, Send, Star, X } from "../../icons";
 import { Avatar, Button, Kbd, Photo, type Act } from "../../ui";

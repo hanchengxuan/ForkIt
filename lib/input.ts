@@ -1,6 +1,4 @@
-import type { Limits } from "@/lib/budget";
-
-export const bad = (error: string, status = 400) => Response.json({ error }, { status });
+import type { Limits } from "./budget";
 
 export function parseName(v: unknown): string | null {
   const name = typeof v === "string" ? v.trim().slice(0, 24) : "";

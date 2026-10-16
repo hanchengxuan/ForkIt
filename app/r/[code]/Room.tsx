@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { RoomView } from "@/lib/rooms";
+import type { RoomView } from "@/lib/room";
 import { Pin } from "../../icons";
 import { ensureSession } from "@/lib/auth-client";
 import { Account, api, Button, CodeJoin, Logo, type Act } from "../../ui";

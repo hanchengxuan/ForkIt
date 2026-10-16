@@ -1,5 +1,5 @@
 import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import type { Room } from "../rooms";
+import type { Room } from "../room";
 
 // One JSON row per room: every request reads and writes the whole room.
 export const rooms = pgTable("rooms", {

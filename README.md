@@ -10,7 +10,7 @@ docker run -d --name forkit-pg -e POSTGRES_PASSWORD=forkit -e POSTGRES_DB=forkit
 npm install
 npm run db:migrate           # creates the rooms table
 npm run dev                  # http://localhost:3000
-npm test                     # scoring rules
+npm test                     # scoring, budget and room rules
 ```
 
 ## Deploy
@@ -33,7 +33,8 @@ The key needs **Places API (New)** enabled in Google Cloud. Without a key the ap
 ## Code map
 
 - `lib/scoring.ts` — pure ranking and tie-break rules (tested in `scoring.test.ts`)
-- `lib/rooms.ts` — room state in Postgres via Drizzle (one JSONB row per room, row-locked on every write)
+- `lib/room.ts` — pure room rules: one table of actions (join, vote, tap, …), each with its host/lobby checks (tested in `room.test.ts`). A new feature is a new entry there
+- `lib/rooms.ts` — room storage in Postgres via Drizzle (one JSONB row per room, row-locked on every write)
 - `lib/db/` — Drizzle schema (rooms + Better Auth tables) and client; migrations live in `drizzle/`
 - `lib/auth.ts` / `lib/auth-client.ts` — Better Auth: email + password, guest accounts; room APIs identify you by session cookie
 - `lib/places.ts` — Google Places search + sample fallback

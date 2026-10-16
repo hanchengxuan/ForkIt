@@ -6,7 +6,7 @@ import { useEffect, useId, useState } from "react";
 import { authClient, ensureSession, signOut } from "@/lib/auth-client";
 import type { Suggestion } from "@/lib/places";
 import { money, type Limits } from "@/lib/budget";
-import type { RoomView } from "@/lib/rooms";
+import type { RoomView } from "@/lib/room";
 import { Arrow, Check, Fork } from "./icons";
 
 export type Act = (action: string, extra?: object) => Promise<void>;
