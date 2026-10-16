@@ -1,11 +1,16 @@
-import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import type { Room } from "../room";
 
 // One JSON row per room: every request reads and writes the whole room.
-export const rooms = pgTable("rooms", {
-  code: text("code").primaryKey(),
-  data: jsonb("data").$type<Room>().notNull(),
-});
+export const rooms = pgTable(
+  "rooms",
+  {
+    code: text("code").primaryKey(),
+    data: jsonb("data").$type<Room>().notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("rooms_created_at_idx").on(t.createdAt)],
+);
 
 // Better Auth tables (core schema + anonymous plugin's isAnonymous)
 export const user = pgTable("user", {

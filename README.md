@@ -34,7 +34,7 @@ The key needs **Places API (New)** enabled in Google Cloud. Without a key the ap
 
 - `lib/scoring.ts` — pure ranking and tie-break rules (tested in `scoring.test.ts`)
 - `lib/room.ts` — pure room rules: one table of actions (join, vote, tap, …), each with its host/lobby checks (tested in `room.test.ts`). A new feature is a new entry there
-- `lib/rooms.ts` — room storage in Postgres via Drizzle (one JSONB row per room, row-locked on every write)
+- `lib/rooms.ts` — room storage in Postgres via Drizzle (one JSONB row per room, row-locked on every write). Rooms expire after 7 days: creating a room deletes expired ones, which frees their codes
 - `lib/db/` — Drizzle schema (rooms + Better Auth tables) and client; migrations live in `drizzle/`
 - `lib/auth.ts` / `lib/auth-client.ts` — Better Auth: email + password, guest accounts; room APIs identify you by session cookie
 - `lib/places.ts` — Google Places search + sample fallback

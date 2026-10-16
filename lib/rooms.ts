@@ -1,6 +1,6 @@
 import "server-only";
 import { randomInt } from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { eq, lt, sql } from "drizzle-orm";
 import { db } from "./db";
 import { rooms } from "./db/schema";
 import type { Limits } from "./budget";
@@ -24,6 +24,9 @@ export function updateRoom(code: string, change: (room: Room) => void): Promise<
 }
 
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ"; // no I/L/O, easy to read out loud
+// 4 letters give ~280k codes, so old rooms must go or new ones run out of codes
+const ROOM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const MAX_CODE_TRIES = 20;
 
 export async function createRoom(input: {
   userId: string;
@@ -51,13 +54,15 @@ export async function createRoom(input: {
     votes: {},
     ranked: [],
   };
+  // Creating a room sweeps expired ones, so codes free up without a cron job
+  await db.delete(rooms).where(lt(rooms.createdAt, new Date(Date.now() - ROOM_TTL_MS)));
   // Retry on a taken code; ON CONFLICT makes the check and the insert one step
-  for (;;) {
+  for (let i = 0; i < MAX_CODE_TRIES; i++) {
     room.code = Array.from({ length: 4 }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join("");
     const inserted = await db.insert(rooms).values({ code: room.code, data: room }).onConflictDoNothing().returning({ code: rooms.code });
-    if (inserted.length) break;
+    if (inserted.length) return room;
   }
-  return room;
+  throw new Error("No free room codes");
 }
 
 /** A guest signed in: their seats, votes and taps now belong to the real account. */
