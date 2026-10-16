@@ -9,6 +9,11 @@ import { moveMember } from "./rooms";
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: { enabled: true },
+  rateLimit: {
+    // A whole table on one restaurant Wi-Fi shares an IP and opens the link at once.
+    // Guest sign-in only creates a guest, so it can be generous; password sign-in keeps the strict default.
+    customRules: { "/sign-in/anonymous": { window: 60, max: 30 } },
+  },
   plugins: [
     // Everyone gets a guest account on first visit, so joining a room never needs a sign-up
     anonymous({

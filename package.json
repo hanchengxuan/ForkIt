@@ -12,17 +12,21 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@neon/config": "^1.9.2",
+    "@neon/env": "^1.6.3",
+    "@vercel/functions": "^3.10.1",
     "better-auth": "^1.7.10",
     "drizzle-orm": "^0.45.4",
     "motion": "^14.3.0",
     "next": "16.4.2",
-    "postgres": "^3.4.9",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.11",
