@@ -145,7 +145,7 @@ function DeckCount({ room }: { room: RoomView }) {
         {left} {left === 1 ? "place" : "places"}
       </span>
       <span className={`text-sm ${left ? "text-muted" : "text-coral"}`}>
-        {left ? "fit everyone's budget" : "nothing fits everyone's budget"}
+        {room.picksOnly ? (left ? "added by your group" : "add a restaurant to start") : left ? "fit everyone's budget" : "nothing fits everyone's budget"}
         {room.source === "sample" && " · sample data"}
       </span>
     </div>
@@ -262,6 +262,19 @@ function Places({ room, act }: { room: RoomView; act: Act }) {
             act("addPlace", { placeId: s.id });
           }}
         />
+      )}
+      {room.source === "google" && (
+        <label className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3 text-sm font-bold lg:bg-night">
+          Only places we add
+          <input
+            type="checkbox"
+            role="switch"
+            checked={room.picksOnly}
+            disabled={!room.isHost}
+            onChange={(e) => act("setPicksOnly", { on: e.target.checked })}
+            className="size-5 accent-lime disabled:opacity-60"
+          />
+        </label>
       )}
       <details className="group rounded-2xl bg-surface lg:bg-night">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold">

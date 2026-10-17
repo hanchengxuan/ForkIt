@@ -75,6 +75,21 @@ test("start deals the deck within the group's lowest budget; unpriced places sta
   assert.deepEqual(room.deck, ["a", "c"]);
 });
 
+test("picks only: the deck is just the hand-added places, budget or not", () => {
+  const room = lobby("bo");
+  rejects(() => act(room, "bo", "setPicksOnly", { on: true }), "Only the host can do that");
+  act(room, "ann", "setPicksOnly", { on: true });
+  rejects(() => act(room, "ann", "start", {}), "Add a restaurant first");
+  act(room, "bo", "addPlace", {}, { picked: place("d", 999) });
+  act(room, "bo", "setLimits", { limits: { maxSpend: 30 } });
+  assert.deepEqual(toView(room, "bo").deck, ["d"]);
+  act(room, "ann", "setPicksOnly", { on: false });
+  assert.deepEqual(toView(room, "bo").deck, ["d", "a", "c"]);
+  act(room, "ann", "setPicksOnly", { on: true });
+  act(room, "ann", "start", {});
+  assert.deepEqual(room.deck, ["d"]);
+});
+
 test("one veto per person; taking it back frees it", () => {
   const room = voting("bo");
   act(room, "ann", "vote", { restaurantId: "a", vote: "veto" });

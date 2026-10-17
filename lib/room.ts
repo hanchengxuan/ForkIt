@@ -22,6 +22,7 @@ export type Room = {
   status: "lobby" | "voting" | "results";
   pool: Restaurant[]; // up to 60 Google candidates, best first, plus places added by hand
   deck: string[]; // ids within everyone's budget, set when voting starts
+  picksOnly?: boolean; // host's choice: swipe only places added by hand, no Google suggestions
   members: Member[];
   votes: Record<string, Record<string, Vote>>;
   ranked: Ranked[];
@@ -62,10 +63,11 @@ export function renameMember(room: Room, from: string, to: string) {
   if (room.tieBreak?.kind === "tapwar") rekey(room.tieBreak.taps);
 }
 
-/** What the group will swipe: every hand-picked place, plus Google's best 20 within the group's budget. */
-export function buildDeck(room: Pick<Room, "pool" | "members">): Restaurant[] {
-  const max = groupBudget(room.members.map((m) => m.limits));
+/** What the group will swipe: every hand-picked place, plus (unless picks only) Google's best 20 within the group's budget. */
+export function buildDeck(room: Pick<Room, "pool" | "members" | "picksOnly">): Restaurant[] {
   const picked = room.pool.filter((r) => r.addedBy);
+  if (room.picksOnly) return picked;
+  const max = groupBudget(room.members.map((m) => m.limits));
   const best = room.pool.filter((r) => !r.addedBy && fits(r, max)).slice(0, DECK_SIZE);
   return [...picked, ...best];
 }
@@ -144,7 +146,7 @@ const ACTIONS = {
     run(room) {
       if (room.status !== "lobby") throw new RoomError("Already started");
       room.deck = buildDeck(room).map((r) => r.id);
-      if (room.deck.length === 0) throw new RoomError("No places fit everyone's budget");
+      if (room.deck.length === 0) throw new RoomError(room.picksOnly ? "Add a restaurant first" : "No places fit everyone's budget");
       room.status = "voting";
     },
   },
@@ -207,6 +209,13 @@ const ACTIONS = {
       room.craving = parseCraving(body.craving);
       room.source = found.source;
       room.center = found.center;
+    },
+  },
+  setPicksOnly: {
+    hostOnly: true,
+    lobbyOnly: true,
+    run(room, _me, { on }) {
+      room.picksOnly = on === true;
     },
   },
   addPlace: {
@@ -279,6 +288,7 @@ export function toView(room: Room, meId: string | null) {
     craving: room.craving ?? "",
     source: room.source,
     currency: currencyOf(room.pool),
+    picksOnly: room.picksOnly ?? false,
     status: room.status,
     now: Date.now(),
     me,
