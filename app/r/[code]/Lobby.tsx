@@ -263,7 +263,7 @@ function Places({ room, act }: { room: RoomView; act: Act }) {
           }}
         />
       )}
-      {room.source === "google" && (
+      {(room.source === "google" || room.picksOnly) && (
         <label className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3 text-sm font-bold lg:bg-night">
           Only places we add
           <input
