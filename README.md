@@ -15,7 +15,7 @@ npm test                     # scoring, budget and room rules (CI also runs lint
 
 ## Deploy
 
-Any host that runs Next.js works (Vercel, Railway, Fly). Set `DATABASE_URL` to a Postgres database (on Neon: the pooled URL, plus `DATABASE_URL_UNPOOLED` for migrations), `GOOGLE_MAPS_API_KEY`, `BETTER_AUTH_SECRET` (random, 32+ chars) and `BETTER_AUTH_URL` (the site's public URL), then run `npm run db:migrate` once against that database. After changing `lib/db/schema.ts`, run `npm run db:generate` and commit the new file in `drizzle/`.
+Any host that runs Next.js works (Vercel, Railway, Fly). Set `DATABASE_URL` to a Postgres database (on Neon: the pooled URL, plus `DATABASE_URL_UNPOOLED` for migrations), `GOOGLE_MAPS_API_KEY`, `BETTER_AUTH_SECRET` (random, 32+ chars) and `BETTER_AUTH_URL` (the site's public URL), then run `npm run db:migrate` once against that database. On Vercel this is automatic for production: the `vercel-build` script runs `drizzle-kit migrate` before `next build` when `VERCEL_ENV=production`, using `DATABASE_URL_UNPOOLED` (falls back to `DATABASE_URL`), so a failed migration fails the deploy. Preview and local builds never migrate. After changing `lib/db/schema.ts`, run `npm run db:generate` and commit the new file in `drizzle/`.
 
 The key needs **Places API (New)** enabled in Google Cloud. Without a key the app uses 12 sample restaurants.
 
