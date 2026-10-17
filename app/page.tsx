@@ -29,6 +29,8 @@ export default function Home() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // cacheComponents keeps this page alive behind the room, so going back would find the button still busy
+  useEffect(() => () => setBusy(false), []);
 
   function locate() {
     setError("");
