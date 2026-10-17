@@ -37,6 +37,7 @@ export async function createRoom(input: {
   source: Room["source"];
   center?: LatLng;
   pool: Restaurant[];
+  picksOnly?: boolean;
 }): Promise<Room> {
   const host = newMember(input.userId, input.name, input.limits);
   const room: Room = {
@@ -49,6 +50,7 @@ export async function createRoom(input: {
     center: input.center,
     status: "lobby",
     pool: input.pool,
+    picksOnly: input.picksOnly,
     deck: [],
     members: [host],
     votes: {},

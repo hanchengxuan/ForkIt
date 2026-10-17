@@ -115,7 +115,7 @@ export function Lobby({ room, act }: { room: RoomView; act: Act }) {
         </div>
 
         <SearchPicker room={room} act={act} />
-        <MyBudget room={room} act={act} />
+        {!room.picksOnly && <MyBudget room={room} act={act} />}
 
         <div className="hidden lg:flex lg:items-baseline lg:justify-between">
           <DeckCount room={room} />
@@ -163,16 +163,18 @@ function SearchPicker({ room, act }: { room: RoomView; act: Act }) {
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="flex min-w-0 items-center gap-2">
             <Pin className="size-4 shrink-0 text-faint" />
-            <span className="truncate font-bold">{room.area}</span>
+            <span className="truncate font-bold">{room.area || "Your own list"}</span>
           </span>
-          <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
-            <Fork className="size-4 shrink-0 text-faint" />
-            <span className="truncate">{room.craving || "Any food"}</span>
-          </span>
+          {room.area && (
+            <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
+              <Fork className="size-4 shrink-0 text-faint" />
+              <span className="truncate">{room.craving || "Any food"}</span>
+            </span>
+          )}
         </span>
         {room.isHost && (
           <button onClick={() => setDraft({ area: room.area, craving: room.craving })} className="shrink-0 text-sm font-bold text-lime">
-            Change
+            {room.area ? "Change" : "Search an area"}
           </button>
         )}
       </div>

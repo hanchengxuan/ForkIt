@@ -25,6 +25,7 @@ export default function Home() {
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
   const [craving, setCraving] = useState("");
+  const [ownList, setOwnList] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -46,7 +47,10 @@ export default function Home() {
     setError("");
     try {
       await ensureSession();
-      const res = await api("/api/rooms", { name: name || accountName, area, craving, ...coords });
+      const res = await api(
+        "/api/rooms",
+        ownList ? { name: name || accountName, picksOnly: true } : { name: name || accountName, area, craving, ...coords },
+      );
       router.push(`/r/${res.room.code}`);
     } catch (err) {
       setError((err as Error).message);
@@ -80,41 +84,66 @@ export default function Home() {
           </h1>
 
           <form onSubmit={create} className="flex flex-1 flex-col gap-2.5 lg:max-w-[480px] lg:flex-none">
-            <div className="grid gap-2.5 lg:grid-cols-2">
-              <Field icon={<User />} aria-label="Your name" placeholder="Your name" value={name || accountName} onChange={(e) => setName(e.target.value)} maxLength={24} required />
-              <Suggest
-                kind="area"
-                icon={<Pin />}
-                aria-label="Where are you eating?"
-                placeholder="Where?"
-                value={coords ? "Near me" : area}
-                onChange={(e) => {
-                  setCoords(null);
-                  setArea(e.target.value);
-                }}
-                onPick={(s) => setArea(s.secondary ? `${s.main}, ${s.secondary}` : s.main)}
-                required
-              >
+            <div role="radiogroup" aria-label="Which places to swipe" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface p-1 text-sm font-bold">
+              {(
+                [
+                  ["Search an area", false],
+                  ["Our own list", true],
+                ] as const
+              ).map(([label, own]) => (
                 <button
+                  key={label}
                   type="button"
-                  onClick={locate}
-                  aria-label="Use my location"
-                  className={`grid size-10 shrink-0 place-items-center rounded-xl ${coords ? "bg-lime text-night" : "bg-line text-lime"}`}
+                  role="radio"
+                  aria-checked={ownList === own}
+                  onClick={() => setOwnList(own)}
+                  className={`h-10 rounded-xl transition ${ownList === own ? "bg-lime text-night" : "text-muted hover:text-paper"}`}
                 >
-                  <Send className="size-[18px]" />
+                  {label}
                 </button>
-              </Suggest>
+              ))}
             </div>
-            <Field
-              icon={<Fork />}
-              aria-label="What are you craving?"
-              placeholder="Craving? e.g. yum cha, fried chicken (optional)"
-              value={craving}
-              onChange={(e) => setCraving(e.target.value)}
-              maxLength={40}
-            />
+            <div className={`grid gap-2.5 ${ownList ? "" : "lg:grid-cols-2"}`}>
+              <Field icon={<User />} aria-label="Your name" placeholder="Your name" value={name || accountName} onChange={(e) => setName(e.target.value)} maxLength={24} required />
+              {!ownList && (
+                <Suggest
+                  kind="area"
+                  icon={<Pin />}
+                  aria-label="Where are you eating?"
+                  placeholder="Where?"
+                  value={coords ? "Near me" : area}
+                  onChange={(e) => {
+                    setCoords(null);
+                    setArea(e.target.value);
+                  }}
+                  onPick={(s) => setArea(s.secondary ? `${s.main}, ${s.secondary}` : s.main)}
+                  required
+                >
+                  <button
+                    type="button"
+                    onClick={locate}
+                    aria-label="Use my location"
+                    className={`grid size-10 shrink-0 place-items-center rounded-xl ${coords ? "bg-lime text-night" : "bg-line text-lime"}`}
+                  >
+                    <Send className="size-[18px]" />
+                  </button>
+                </Suggest>
+              )}
+            </div>
+            {ownList ? (
+              <p className="px-1 text-sm text-muted">Everyone adds the places they want, then you swipe on just those.</p>
+            ) : (
+              <Field
+                icon={<Fork />}
+                aria-label="What are you craving?"
+                placeholder="Craving? e.g. yum cha, fried chicken (optional)"
+                value={craving}
+                onChange={(e) => setCraving(e.target.value)}
+                maxLength={40}
+              />
+            )}
             <Button className="mt-auto lg:mt-0" disabled={busy}>
-              {busy ? "Finding places…" : "Start a group"}
+              {busy ? (ownList ? "Starting…" : "Finding places…") : "Start a group"}
               {!busy && <Arrow />}
             </Button>
             {error && <p className="text-sm font-medium text-coral">{error}</p>}
