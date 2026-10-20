@@ -8,14 +8,16 @@ Group dinner decider: everyone swipes on nearby restaurants, the app picks.
 cp .env.example .env.local   # then paste your key after GOOGLE_MAPS_API_KEY=
 docker run -d --name forkit-pg -e POSTGRES_PASSWORD=forkit -e POSTGRES_DB=forkit -p 5432:5432 postgres:17
 npm install
-npm run db:migrate           # creates the rooms table
+npm run db:migrate           # creates the tables
 npm run dev                  # http://localhost:3000
-npm test                     # scoring, budget and room rules (CI also runs lint and typecheck)
+npm test                     # pure rules; CI also runs lint, typecheck and the database tests
+docker exec forkit-pg createdb -U postgres forkit_test     # once, for the room action tests:
+TEST_DATABASE_URL=postgresql://postgres:forkit@localhost:5432/forkit_test npm test
 ```
 
 ## Deploy
 
-Any host that runs Next.js works (Vercel, Railway, Fly). Set `DATABASE_URL` to a Postgres database (on Neon: the pooled URL, plus `DATABASE_URL_UNPOOLED` for migrations), `GOOGLE_MAPS_API_KEY`, `BETTER_AUTH_SECRET` (random, 32+ chars) and `BETTER_AUTH_URL` (the site's public URL), then run `npm run db:migrate` once against that database. On Vercel this is automatic for production: the `vercel-build` script runs `drizzle-kit migrate` before `next build` when `VERCEL_ENV=production`, using `DATABASE_URL_UNPOOLED` (falls back to `DATABASE_URL`), so a failed migration fails the deploy. Preview and local builds never migrate. After changing `lib/db/schema.ts`, run `npm run db:generate` and commit the new file in `drizzle/`.
+Any host that runs Next.js works (Vercel, Railway, Fly). Set `DATABASE_URL` to a Postgres database (with a connection pooler, e.g. Supabase or Neon: the pooled URL, plus a direct or session URL in `DATABASE_URL_UNPOOLED` for migrations), `GOOGLE_MAPS_API_KEY`, `BETTER_AUTH_SECRET` (random, 32+ chars) and `BETTER_AUTH_URL` (the site's public URL), then run `npm run db:migrate` once against that database. On Vercel this is automatic for production: the `vercel-build` script runs `drizzle-kit migrate` before `next build` when `VERCEL_ENV=production`, using `DATABASE_URL_UNPOOLED` (falls back to `DATABASE_URL`), so a failed migration fails the deploy. Preview and local builds never migrate. After changing `lib/db/schema.ts`, run `npm run db:generate` and commit the new file in `drizzle/`.
 
 The key needs **Places API (New)** enabled in Google Cloud. Without a key the app uses 12 sample restaurants.
 
@@ -32,11 +34,14 @@ The key needs **Places API (New)** enabled in Google Cloud. Without a key the ap
 
 ## Code map
 
-- `lib/scoring.ts` — pure ranking and tie-break rules (tested in `scoring.test.ts`)
-- `lib/room.ts` — pure room rules: one table of actions (join, vote, tap, …), each with its host/lobby checks (tested in `room.test.ts`). A new feature is a new entry there
-- `lib/rooms.ts` — room storage in Postgres via Drizzle (one JSONB row per room, row-locked on every write). Rooms expire after 7 days: creating a room deletes expired ones, which frees their codes
-- `lib/db/` — Drizzle schema (rooms + Better Auth tables) and client; migrations live in `drizzle/`
+Three layers: pure rules, room actions, SQL.
+
+- `lib/domain/` — pure rules with unit tests, no database: ranking and tie-breaks (`scoring.ts`), budgets (`budget.ts`), which places make the deck (`deck.ts`), how a round ends and tap limits (`outcome.ts`), input cleanup (`input.ts`)
+- `lib/service/actions.ts` — one table of actions (join, vote, tap, …), each with its host/lobby checks. Each runs in one transaction that locks the room row (`FOR UPDATE`), so actions on one room apply one at a time, then bumps the room's version. A new feature is a new entry there, plus a test in `actions.test.ts` (runs against a real Postgres)
+- `lib/service/view.ts` — what a phone may see, read in one REPEATABLE READ transaction. Other people's swipes stay hidden until results
+- `lib/repo/` — SQL only, one file per table
+- `lib/db/schema.ts` — `rooms` (settings, phase, outcome), `room_members`, `room_places` (a room's candidates and deck), `places` (Google details cached once and shared by rooms), `votes`, `taps`, plus the Better Auth tables. Foreign keys cascade: deleting a room removes its rows, and renaming a member (guest → real account) carries their votes and taps. One veto per person is a unique index. Rooms expire after 7 days: creating a room deletes expired ones and the places only they used
 - `lib/auth.ts` / `lib/auth-client.ts` — Better Auth: email + password, guest accounts; room APIs identify you by session cookie
-- `lib/places.ts` — Google Places search + sample fallback
+- `lib/google-places.ts` — Google Places search + sample fallback. Routes call it before taking the room lock, so a slow search never holds up other phones
 - `app/api/photo` — streams Google photos so the API key never reaches the browser
-- `app/r/[code]` — lobby, swipe deck, tap war, wheel, results. Phones poll every 1.5s (0.4s during a tap war), sending the version they hold; the server answers "unchanged" from two small columns (`version`, `tap_ends_at`) and only loads the room JSON when it moved.
+- `app/r/[code]` — lobby, swipe deck, tap war, wheel, results. Phones poll every 1.5s (0.4s during a tap war), sending the version they hold; the server answers "unchanged" from the `rooms` row alone and only builds the full view when the version moved

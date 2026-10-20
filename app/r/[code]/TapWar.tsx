@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Act } from "@/lib/api-client";
-import type { RoomView } from "@/lib/room";
+import type { RoomView } from "@/lib/service/view";
 import { Crown, Hand } from "../../icons";
 import { Kbd, Photo } from "../../ui";
 

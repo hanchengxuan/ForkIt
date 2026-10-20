@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useState } from "react";
-import type { RoomView } from "@/lib/room";
-import type { Vote } from "@/lib/scoring";
+import type { RoomView } from "@/lib/service/view";
+import type { Vote } from "@/lib/domain/scoring";
 import { Ban, ChevronUp, Crown, Heart, Refresh, Send, Star, X } from "../../icons";
 import type { Act } from "@/lib/api-client";
 import { Avatar, Button, Photo } from "../../ui";

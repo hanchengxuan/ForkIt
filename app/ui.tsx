@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { authClient, ensureSession, signOut } from "@/lib/auth-client";
-import type { Suggestion } from "@/lib/places";
-import { money, type Limits } from "@/lib/budget";
+import type { Suggestion } from "@/lib/google-places";
+import { money, type Limits } from "@/lib/domain/budget";
 import { api } from "@/lib/api-client";
-import type { RoomView } from "@/lib/room";
+import type { RoomView } from "@/lib/service/view";
 import { Arrow, Check, Fork } from "./icons";
 
 /** Shows who's signed in. Guests see a sign-in link; their rooms move to the account when they sign in. */

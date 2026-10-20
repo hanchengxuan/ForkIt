@@ -1,6 +1,6 @@
 import { userIdOf } from "@/lib/auth";
-import { suggest } from "@/lib/places";
-import { getRoom } from "@/lib/rooms";
+import { suggest } from "@/lib/google-places";
+import { roomInfo } from "@/lib/service/view";
 import { bad } from "@/lib/http";
 
 /** Typeahead: ?q=newt&kind=area, or ?q=sushi&kind=restaurant&code=ABCD to favour places near that room. */
@@ -12,7 +12,8 @@ export async function GET(req: Request) {
   const kind = params.get("kind") === "restaurant" ? "restaurant" : "area";
   if (q.length < 2) return Response.json([]);
   const code = params.get("code");
-  const near = code ? (await getRoom(code.toUpperCase()))?.room.center : undefined;
+  const room = code ? await roomInfo(code.toUpperCase()) : undefined;
+  const near = room?.centerLat != null && room.centerLng != null ? { latitude: room.centerLat, longitude: room.centerLng } : undefined;
   try {
     return Response.json(await suggest(q, kind, near));
   } catch (e) {

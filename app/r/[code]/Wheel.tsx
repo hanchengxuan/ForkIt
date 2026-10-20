@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { RoomView } from "@/lib/room";
+import type { RoomView } from "@/lib/service/view";
 
 const SPIN_MS = 5000;
 const WHEEL_COLORS = ["#c8f03c", "#ff5c4d", "#8fb8ff", "#ffc93c", "#f29ad8", "#7ee0c3"];

@@ -1,8 +1,8 @@
 import { userIdOf } from "@/lib/auth";
-import { findRestaurants } from "@/lib/places";
-import { NEAR_YOU, parseArea, parseCraving, parseName } from "@/lib/input";
-import { toView } from "@/lib/room";
-import { createRoom } from "@/lib/rooms";
+import { findRestaurants } from "@/lib/google-places";
+import { NEAR_YOU, parseArea, parseCraving, parseName } from "@/lib/domain/input";
+import { createRoom } from "@/lib/service/actions";
+import { loadView } from "@/lib/service/view";
 import { bad } from "@/lib/http";
 
 export async function POST(req: Request) {
@@ -13,16 +13,15 @@ export async function POST(req: Request) {
   if (!name) return bad("Please enter your name");
   // The group brings its own list, so there's nowhere to search yet
   if (body?.picksOnly === true) {
-    const room = await createRoom({
+    const code = await createRoom({
       userId,
       name,
-      limits: { maxSpend: null },
       area: "",
       source: process.env.GOOGLE_MAPS_API_KEY ? "google" : "sample",
       pool: [],
       picksOnly: true,
     });
-    return Response.json({ room: toView(room, userId, 0) });
+    return Response.json({ room: await loadView(code, userId) });
   }
 
   const area = parseArea(body?.area);
@@ -33,15 +32,14 @@ export async function POST(req: Request) {
 
   const found = await findRestaurants({ area, lat, lng, craving });
   if (craving && found.source === "sample" && process.env.GOOGLE_MAPS_API_KEY) return bad(`Couldn't find ${craving} around there`);
-  const room = await createRoom({
+  const code = await createRoom({
     userId,
     name,
-    limits: { maxSpend: null }, // the area's currency isn't known until the search is back; set it in the lobby
     area: area || NEAR_YOU,
     craving,
     source: found.source,
     center: found.center,
     pool: found.restaurants,
   });
-  return Response.json({ notice: found.error, room: toView(room, userId, 0) });
+  return Response.json({ notice: found.error, room: await loadView(code, userId) });
 }
