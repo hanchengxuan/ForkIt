@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const kind = params.get("kind") === "restaurant" ? "restaurant" : "area";
   if (q.length < 2) return Response.json([]);
   const code = params.get("code");
-  const near = code ? (await getRoom(code.toUpperCase()))?.center : undefined;
+  const near = code ? (await getRoom(code.toUpperCase()))?.room.center : undefined;
   try {
     return Response.json(await suggest(q, kind, near));
   } catch (e) {

@@ -1,18 +1,24 @@
 import { userIdOf } from "@/lib/auth";
 import { findRestaurants, placeDetails, type Restaurant } from "@/lib/places";
 import { NEAR_YOU, parseArea, parseCraving } from "@/lib/input";
-import { act, RoomError, settleTapWar, tapWarOver, toView } from "@/lib/room";
-import { getRoom, updateRoom } from "@/lib/rooms";
+import { act, etagOf, RoomError, settleTapWar, tapClockOut, toView } from "@/lib/room";
+import { getRoom, getRoomMeta, updateRoom, type Stored } from "@/lib/rooms";
 import { bad } from "@/lib/http";
 
 export async function GET(req: Request, ctx: RouteContext<"/api/rooms/[code]">) {
-  const { code } = await ctx.params;
+  const code = (await ctx.params).code.toUpperCase();
   const me = await userIdOf(req);
-  let room = await getRoom(code.toUpperCase());
-  if (!room) return bad("No group with that code", 404);
+  const meta = await getRoomMeta(code);
+  if (!meta) return bad("No group with that code", 404);
+  let stored: Stored | undefined;
   // Only lock and write once the clock has run out; tap war polls come in every 0.4s from every phone
-  if (tapWarOver(room)) room = await updateRoom(room.code, settleTapWar);
-  return Response.json(toView(room, me));
+  if (meta.tapEndsAt !== null && tapClockOut(meta.tapEndsAt)) stored = await updateRoom(code, settleTapWar);
+  // Nothing changed since this phone's copy: skip loading the room. `now` still goes out for the clock skew
+  else if (new URL(req.url).searchParams.get("v") === etagOf(meta.version, me))
+    return Response.json({ unchanged: true, now: Date.now() });
+  else stored = await getRoom(code);
+  if (!stored) return bad("No group with that code", 404);
+  return Response.json(toView(stored.room, me, stored.version));
 }
 
 export async function POST(req: Request, ctx: RouteContext<"/api/rooms/[code]">) {
@@ -29,7 +35,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/rooms/[code]">)
   if (body.action === "setSearch") {
     const area = parseArea(body.area);
     if (!area) return bad("Tell us where you're eating");
-    const current = await getRoom(code.toUpperCase());
+    const current = (await getRoom(code.toUpperCase()))?.room;
     if (current?.hostId !== memberId) return bad("Only the host can do that");
     const craving = parseCraving(body.craving);
     // "Near you" rooms were searched by coordinates, so search there again
@@ -48,8 +54,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/rooms/[code]">)
   }
 
   try {
-    const room = await updateRoom(code.toUpperCase(), (room) => act(room, memberId, body.action, body, { found, picked }));
-    return Response.json({ room: toView(room, memberId) });
+    const { room, version } = await updateRoom(code.toUpperCase(), (room) => act(room, memberId, body.action, body, { found, picked }));
+    return Response.json({ room: toView(room, memberId, version) });
   } catch (e) {
     if (e instanceof RoomError) return bad(e.message, e.message === "Room not found" ? 404 : 400);
     throw e;

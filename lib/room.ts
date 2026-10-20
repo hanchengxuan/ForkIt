@@ -98,11 +98,22 @@ export function addTaps(room: Room, memberId: string, counts: Record<string, unk
   }
 }
 
+/** When the unsettled tap war's clock runs out, or null if there is none. Stored in its own column for polls. */
+export function tapEndsAt(room: Room): number | null {
+  const t = room.tieBreak;
+  return t?.kind === "tapwar" && !room.winnerId ? t.endsAt : null;
+}
+
+export const tapClockOut = (endsAt: number, now = Date.now()) => now >= endsAt + TAP_GRACE_MS;
+
 /** True once the tap war's clock has run out and nobody has settled it yet. */
 export function tapWarOver(room: Room, now = Date.now()): boolean {
-  const t = room.tieBreak;
-  return t?.kind === "tapwar" && !room.winnerId && now >= t.endsAt + TAP_GRACE_MS;
+  const endsAt = tapEndsAt(room);
+  return endsAt !== null && tapClockOut(endsAt, now);
 }
+
+/** Changes when the room or the viewer does, so a phone holding this view can skip re-downloading it. */
+export const etagOf = (version: number, meId: string | null) => `${version}:${meId ?? ""}`;
 
 /** The tap war ends on the clock, so reads settle it and no timers are needed. */
 export function settleTapWar(room: Room, now = Date.now()) {
@@ -276,12 +287,13 @@ export function act(room: Room, memberId: string, action: string, body: Body, pr
 }
 
 /** What a phone is allowed to see. Other people's swipes stay hidden until results. */
-export function toView(room: Room, meId: string | null) {
+export function toView(room: Room, meId: string | null, version: number) {
   const me = room.members.find((m) => m.id === meId) ?? null;
   const showVotes = room.status === "results";
   const deck = room.status === "lobby" ? buildDeck(room) : room.deck.map((id) => room.pool.find((r) => r.id === id)!);
   const t = room.tieBreak;
   return {
+    etag: etagOf(version, meId),
     code: room.code,
     name: room.name ?? `${room.members.find((m) => m.id === room.hostId)?.name}'s dinner`,
     area: room.area,

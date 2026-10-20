@@ -39,4 +39,4 @@ The key needs **Places API (New)** enabled in Google Cloud. Without a key the ap
 - `lib/auth.ts` / `lib/auth-client.ts` — Better Auth: email + password, guest accounts; room APIs identify you by session cookie
 - `lib/places.ts` — Google Places search + sample fallback
 - `app/api/photo` — streams Google photos so the API key never reaches the browser
-- `app/r/[code]` — lobby, swipe deck, tap war, wheel, results. Phones poll every 1.5s (0.4s during a tap war).
+- `app/r/[code]` — lobby, swipe deck, tap war, wheel, results. Phones poll every 1.5s (0.4s during a tap war), sending the version they hold; the server answers "unchanged" from two small columns (`version`, `tap_ends_at`) and only loads the room JSON when it moved.

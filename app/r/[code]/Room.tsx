@@ -19,9 +19,11 @@ export default function Room({ code }: { code: string }) {
   const [error, setError] = useState("");
   const [notFound, setNotFound] = useState(false);
   const skew = useRef(0); // server clock minus ours, so countdowns match on every phone
+  const latest = useRef<RoomView | null>(null);
 
   const receive = useCallback((r: RoomView) => {
     skew.current = r.now - Date.now();
+    latest.current = r;
     setRoom(r);
   }, []);
 
@@ -31,9 +33,13 @@ export default function Room({ code }: { code: string }) {
       let fast = false;
       try {
         await ensureSession();
-        const r = await api<RoomView>(`/api/rooms/${code}`);
-        receive(r);
-        fast = r.tieBreak?.kind === "tapwar" && !r.winnerId;
+        // Send the copy we hold, so the server can answer "unchanged" instead of the whole room
+        const etag = latest.current?.etag;
+        const r = await api<RoomView | { unchanged: true; now: number }>(`/api/rooms/${code}${etag ? `?v=${encodeURIComponent(etag)}` : ""}`);
+        if ("unchanged" in r) skew.current = r.now - Date.now();
+        else receive(r);
+        const t = latest.current;
+        fast = t?.tieBreak?.kind === "tapwar" && !t.winnerId;
       } catch (e) {
         if ((e as Error).message.startsWith("No group")) setNotFound(true);
       }

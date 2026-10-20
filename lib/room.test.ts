@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Restaurant } from "./places";
-import { act, addTaps, newMember, renameMember, RoomError, settleTapWar, tapWarOver, toView, type Room } from "./room.ts";
+import { act, addTaps, newMember, renameMember, RoomError, settleTapWar, tapEndsAt, tapWarOver, toView, type Room } from "./room.ts";
 
 const place = (id: string, from?: number): Restaurant => ({
   id,
@@ -82,9 +82,9 @@ test("picks only: the deck is just the hand-added places, budget or not", () => 
   rejects(() => act(room, "ann", "start", {}), "Add a restaurant first");
   act(room, "bo", "addPlace", {}, { picked: place("d", 999) });
   act(room, "bo", "setLimits", { limits: { maxSpend: 30 } });
-  assert.deepEqual(toView(room, "bo").deck, ["d"]);
+  assert.deepEqual(toView(room, "bo", 0).deck, ["d"]);
   act(room, "ann", "setPicksOnly", { on: false });
-  assert.deepEqual(toView(room, "bo").deck, ["d", "a", "c"]);
+  assert.deepEqual(toView(room, "bo", 0).deck, ["d", "a", "c"]);
   act(room, "ann", "setPicksOnly", { on: true });
   act(room, "ann", "start", {});
   assert.deepEqual(room.deck, ["d"]);
@@ -111,11 +111,11 @@ test("results arrive when the last person finishes, and votes show only then", (
   const room = voting("bo");
   for (const id of ["a", "b", "c"]) act(room, "ann", "vote", { restaurantId: id, vote: id === "b" ? "love" : "nope" });
   assert.equal(room.status, "voting");
-  assert.deepEqual(toView(room, "bo").votes, {});
+  assert.deepEqual(toView(room, "bo", 0).votes, {});
   for (const id of ["a", "b", "c"]) act(room, "bo", "vote", { restaurantId: id, vote: "like" });
   assert.equal(room.status, "results");
   assert.equal(room.winnerId, "b");
-  assert.equal(toView(room, "bo").votes.ann.b, "love");
+  assert.equal(toView(room, "bo", 0).votes.ann.b, "love");
 });
 
 test("a tie starts a tap war that settles on the clock to the most taps", () => {
@@ -138,6 +138,26 @@ test("a tie starts a tap war that settles on the clock to the most taps", () => 
   settleTapWar(room, late);
   assert.equal(room.winnerId, "b");
   assert.equal(tapWarOver(room, late), false, "settled once");
+});
+
+test("the tap clock column is set only while a tap war is open", () => {
+  const room = voting("bo");
+  assert.equal(tapEndsAt(room), null);
+  for (const id of ["a", "b", "c"]) act(room, "ann", "vote", { restaurantId: id, vote: id === "c" ? "nope" : "love" });
+  act(room, "ann", "reveal", {});
+  const t = room.tieBreak;
+  if (t?.kind !== "tapwar") return assert.fail("expected a tap war");
+  assert.equal(tapEndsAt(room), t.endsAt);
+  settleTapWar(room, t.endsAt + 5_000);
+  assert.equal(tapEndsAt(room), null);
+});
+
+test("a view's etag changes with the room version and with who is looking", () => {
+  const room = voting("bo");
+  assert.equal(toView(room, "bo", 3).etag, toView(room, "bo", 3).etag);
+  assert.notEqual(toView(room, "bo", 3).etag, toView(room, "bo", 4).etag);
+  assert.notEqual(toView(room, "bo", 3).etag, toView(room, "ann", 3).etag);
+  assert.notEqual(toView(room, "bo", 3).etag, toView(room, null, 3).etag);
 });
 
 test("each person's taps are capped at 150", () => {

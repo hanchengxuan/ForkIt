@@ -5,21 +5,34 @@ import { db } from "./db";
 import { rooms } from "./db/schema";
 import type { Limits } from "./budget";
 import type { LatLng, Restaurant } from "./places";
-import { newMember, renameMember, RoomError, type Room } from "./room";
+import { newMember, renameMember, RoomError, tapEndsAt, type Room } from "./room";
 
-export async function getRoom(code: string): Promise<Room | undefined> {
-  const [row] = await db.select().from(rooms).where(eq(rooms.code, code));
-  return row?.data;
+/** A room plus its version, which goes up by one on every write. */
+export type Stored = { room: Room; version: number };
+
+export async function getRoom(code: string): Promise<Stored | undefined> {
+  const [row] = await db.select({ room: rooms.data, version: rooms.version }).from(rooms).where(eq(rooms.code, code));
+  return row;
+}
+
+/** Just what a poll needs to tell whether anything changed, without loading the room's JSON (~350 KB with 60 places). */
+export async function getRoomMeta(code: string): Promise<{ version: number; tapEndsAt: number | null } | undefined> {
+  const [row] = await db.select({ version: rooms.version, tapEndsAt: rooms.tapEndsAt }).from(rooms).where(eq(rooms.code, code));
+  return row;
 }
 
 /** FOR UPDATE locks the row, so concurrent swipes and taps on one room apply one at a time. */
-export function updateRoom(code: string, change: (room: Room) => void): Promise<Room> {
+export function updateRoom(code: string, change: (room: Room) => void): Promise<Stored> {
   return db.transaction(async (tx) => {
     const [row] = await tx.select().from(rooms).where(eq(rooms.code, code)).for("update");
     if (!row) throw new RoomError("Room not found");
     change(row.data);
-    await tx.update(rooms).set({ data: row.data }).where(eq(rooms.code, code));
-    return row.data;
+    const [{ version }] = await tx
+      .update(rooms)
+      .set({ data: row.data, version: sql`${rooms.version} + 1`, tapEndsAt: tapEndsAt(row.data) })
+      .where(eq(rooms.code, code))
+      .returning({ version: rooms.version });
+    return { room: row.data, version };
   });
 }
 

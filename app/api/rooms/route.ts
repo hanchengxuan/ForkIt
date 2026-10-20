@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       pool: [],
       picksOnly: true,
     });
-    return Response.json({ room: toView(room, userId) });
+    return Response.json({ room: toView(room, userId, 0) });
   }
 
   const area = parseArea(body?.area);
@@ -43,5 +43,5 @@ export async function POST(req: Request) {
     center: found.center,
     pool: found.restaurants,
   });
-  return Response.json({ notice: found.error, room: toView(room, userId) });
+  return Response.json({ notice: found.error, room: toView(room, userId, 0) });
 }
