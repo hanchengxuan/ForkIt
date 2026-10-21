@@ -2,9 +2,9 @@
 
 import { AnimatePresence, animate, motion, useMotionValue, useTransform, type PanInfo } from "motion/react";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import type { Restaurant } from "@/lib/places";
-import type { RoomView } from "@/lib/room";
-import type { Vote } from "@/lib/scoring";
+import type { Restaurant } from "@/lib/google-places";
+import type { RoomView } from "@/lib/service/view";
+import type { Vote } from "@/lib/domain/scoring";
 import { Ban, ChevronUp, Heart, Star, X } from "../../icons";
 import type { Act } from "@/lib/api-client";
 import { Avatar, Button, Kbd, Photo } from "../../ui";

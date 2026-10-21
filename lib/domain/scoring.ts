@@ -1,7 +1,7 @@
 // Pure scoring rules. No imports so `node --test` can run the tests directly.
 
-export type Vote = "nope" | "like" | "love" | "veto";
-export const VOTES: Vote[] = ["nope", "like", "love", "veto"];
+export const VOTES = ["nope", "like", "love", "veto"] as const;
+export type Vote = (typeof VOTES)[number];
 
 const POINTS: Record<Exclude<Vote, "veto">, number> = { nope: 0, like: 1, love: 2 };
 

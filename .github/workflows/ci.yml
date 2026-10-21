@@ -8,6 +8,14 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres: # throwaway database for the room action tests
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: forkit
+          POSTGRES_DB: forkit_test
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,3 +26,5 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:forkit@localhost:5432/forkit_test

@@ -2,9 +2,9 @@
 
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import type { Restaurant } from "@/lib/places";
+import type { Restaurant } from "@/lib/google-places";
 import { Calendar, ChevronDown, Clock, Glass, Globe, Leaf, Phone, Pin, Star, Sun, Users } from "../../icons";
-import { priceLabel } from "@/lib/budget";
+import { priceLabel } from "@/lib/domain/budget";
 import { Photo } from "../../ui";
 
 /** Photo with Tinder-style tap zones: right half = next photo, left half = previous. */

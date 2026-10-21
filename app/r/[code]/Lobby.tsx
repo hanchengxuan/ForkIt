@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { priceLabel, type Limits } from "@/lib/budget";
-import type { RoomView } from "@/lib/room";
+import { priceLabel, type Limits } from "@/lib/domain/budget";
+import type { RoomView } from "@/lib/service/view";
 import { Arrow, Check, Copy, Fork, Pencil, Pin, Plus, Search, Share, User, X } from "../../icons";
 import type { Act } from "@/lib/api-client";
 import { Avatar, budgetLabel, Button, Field, LimitsPicker, Photo, Suggest, useAccountName } from "../../ui";

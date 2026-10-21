@@ -1,5 +1,5 @@
 import "server-only";
-import type { PriceRange } from "./budget";
+import type { PriceRange } from "./domain/budget";
 
 export type Restaurant = {
   id: string;

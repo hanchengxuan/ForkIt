@@ -1,4 +1,5 @@
-import type { ActionName, RoomView } from "./room";
+import type { ActionName } from "./service/actions";
+import type { RoomView } from "./service/view";
 
 export type Act = (action: ActionName, extra?: object) => Promise<void>;
 
